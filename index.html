@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPS Ecosystem</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+  <style>
+    /* ============================================================
+       SCDE Application Style Guide tokens
+       Source: SCDE_Application_Style_Guide.html
+       All colors are HSL channels so we can compose opacity inline.
+       ============================================================ */
+    :root {
+      /* Primary brand */
+      --primary:        210 24% 24%;   /* Slate #2F3D4C */
+      --primary-foreground: 0 0% 98%;
+      --brand-gold:     38 84% 64%;    /* #F1BA55 */
+      --brand-teal:     202 35% 40%;   /* #43718B */
+
+      /* Secondary brand */
+      --brand-navy:     208 43% 24%;   /* #234058 */
+      --brand-cream:    38 100% 90%;   /* #FFEDCC */
+      --brand-slate:    212 21% 56%;   /* #778BA5 Slate Blue */
+      --brand-alice:    208 100% 97%;  /* #F0F8FF */
+
+      /* Surfaces / neutral */
+      --background:     0 0% 100%;
+      --foreground:     240 10% 3.9%;
+      --card:           0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --muted:          240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --border:         240 5.9% 90%;
+      --ring:           210 24% 24%;
+      --input:          240 5.9% 90%;
+
+      /* Semantic */
+      --destructive:    0 72% 51%;
+      --destructive-foreground: 0 0% 98%;
+      --success:        142 71% 36%;
+      --warning:        38 92% 50%;
+      --info:           199 89% 48%;
+
+      /* Radius */
+      --radius-sm: 4px;
+      --radius:    8px;
+      --radius-lg: 12px;
+
+      /* Elevation */
+      --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+
+      /* Type */
+      --font-display: 'Brandon Grotesque', 'Poppins', 'Aptos', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-heading: 'Poppins', 'Aptos', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-body:    'Aptos', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: hsl(var(--brand-alice));
+      color: hsl(var(--foreground));
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #root { max-width: 1400px; margin: 0 auto; padding: 24px 28px; }
+
+    h1, h2, h3, .card-title, .dialog-title, .alert-title {
+      font-family: var(--font-heading);
+    }
+
+    /* ============================================================
+       Page title (H1 from the SCDE type scale)
+       Poppins · 30px · 600 · -0.02em
+       ============================================================ */
+    .gps-title {
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: hsl(var(--primary));
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .gps-definition {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.6;
+      max-width: 880px;
+      margin: 0 auto;
+    }
+    .gps-titleblock { text-align: center; margin-bottom: 24px; }
+
+    /* ============================================================
+       Card (the SCDE container pattern) + band/rail variants
+       ============================================================ */
+    .card {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xs);
+    }
+    .card-title { font-size: 16px; font-weight: 600; line-height: 1.25; color: hsl(var(--foreground)); }
+    .card-desc  { font-size: 12px; font-weight: 400; line-height: 1.5; color: hsl(var(--muted-foreground)); margin-top: 4px; }
+
+    /* Band — horizontal card with accent left border, used in the center column */
+    .band {
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 16px;
+      align-items: start;
+      border-left-width: 4px;
+      border-left-style: solid;
+    }
+
+    /* Rail — vertical card with gradient accent background, used on the sides */
+    .rail {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .rail-header { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
+
+    /* ============================================================
+       Tile — clickable item (one row per Excel item)
+       Functionally a button; visually a small card.
+       ============================================================ */
+    .tile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      min-height: 36px;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.25;
+      cursor: pointer;
+      box-shadow: var(--shadow-xs);
+      font-family: var(--font-body);
+      transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
+    }
+    .tile:hover { border-color: hsl(var(--ring) / 0.45); }
+    .tile:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+    .tile.is-active {
+      color: hsl(var(--primary-foreground));
+      box-shadow: var(--shadow-md);
+    }
+
+    .tile-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tile-grid-4col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+
+    /* Future asterisk */
+    .future-star {
+      color: hsl(var(--brand-gold));
+      font-weight: 700;
+      margin-left: 3px;
+    }
+
+    /* ============================================================
+       Buttons (subset of the design-system buttons used here)
+       ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font-body);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s ease, opacity 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-ghost { background: transparent; color: hsl(var(--foreground)); }
+    .btn-ghost:hover { background: hsl(var(--muted)); }
+    .btn-icon { width: 28px; height: 28px; padding: 0; }
+
+    /* ============================================================
+       Dialog — SCDE pattern (.dialog-mock), adapted as side-floating
+       ============================================================ */
+    .dialog-overlay {
+      position: fixed; inset: 0;
+      background: rgb(0 0 0 / 0.12);
+      z-index: 50;
+    }
+    .dialog {
+      position: fixed;
+      top: 20px; right: 20px;
+      width: 360px;
+      max-height: calc(100vh - 40px);
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      z-index: 60;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: dialogIn 0.18s ease-out;
+    }
+    @keyframes dialogIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .dialog-header {
+      padding: 14px 16px;
+      color: hsl(var(--primary-foreground));
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .dialog-title { font-size: 16px; font-weight: 600; line-height: 1.25; }
+    .dialog-body { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .dialog-desc { font-size: 14px; line-height: 1.6; color: hsl(var(--foreground)); }
+    .dialog-close {
+      background: rgb(255 255 255 / 0.18);
+      border: none;
+      color: hsl(var(--primary-foreground));
+      width: 28px; height: 28px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .dialog-close:hover { background: rgb(255 255 255 / 0.28); }
+
+    /* ============================================================
+       Badge — used for dashboard chips in the dialog
+       ============================================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.5;
+      border: 1px solid transparent;
+    }
+    .badge-secondary { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+    .badge-group { display: flex; flex-wrap: wrap; gap: 4px; }
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 8px;
+    }
+
+    /* ============================================================
+       Alert (warning / info) — used for the future callout
+       and the doc-link footer
+       ============================================================ */
+    .alert {
+      display: flex;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      background: hsl(var(--background));
+      align-items: flex-start;
+    }
+    .alert-icon { flex-shrink: 0; width: 16px; height: 16px; margin-top: 2px; }
+    .alert-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .alert-desc  { font-size: 12px; color: hsl(var(--muted-foreground)); line-height: 1.5; }
+    .alert-warning { border-color: hsl(var(--warning) / 0.4); background: hsl(var(--warning) / 0.05); }
+    .alert-warning .alert-icon { color: hsl(var(--warning)); }
+    .alert-info    { border-color: hsl(var(--info) / 0.3);    background: hsl(var(--info) / 0.05); }
+    .alert-info    .alert-icon { color: hsl(var(--info)); }
+    .alert a { color: hsl(var(--primary)); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+    /* ============================================================
+       Asterisk note at the bottom
+       ============================================================ */
+    .gps-footnote {
+      margin-top: 16px;
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      text-align: right;
+    }
+    .gps-footnote .future-star { font-weight: 700; }
+
+    /* ============================================================
+       Layout grid + loading/error states
+       ============================================================ */
+    .gps-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr 200px;
+      gap: 16px;
+      align-items: stretch;
+    }
+    .gps-center-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .gps-state {
+      padding: 96px 24px;
+      text-align: center;
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      font-family: var(--font-body);
+    }
+    .gps-state.error { color: hsl(var(--destructive)); }
+    .gps-state small { display: block; margin-top: 8px; font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 400; }
+
+    /* Skeleton loader (from SCDE design system) */
+    .skeleton {
+      background: hsl(var(--muted));
+      border-radius: var(--radius-sm);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.55; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="gps-state">Loading ecosystem…</div>
+  </div>
+
+  <script type="text/babel" data-presets="env,react">
+  // =====================================================================
+  // GPS Ecosystem viewer
+  // Data lives in ./data.xlsx next to this file. To migrate to Azure Blob
+  // or any other source, change only DATA_URL.
+  // =====================================================================
+
+  const DATA_URL = './data.xlsx';
+
+  // SCDE brand colors as HSL channel strings, so we compose opacity inline.
+  // Each section maps to one brand color.
+  const ACCENT_HSL = {
+    'Audiences':     '38 84% 64%',    // brand-gold (primary)
+    'Tools & Apps':  '208 43% 24%',   // brand-navy (secondary)
+    'Outputs':       '208 43% 24%',   // brand-navy (mixed into Tools band)
+    'Data Services': '202 35% 40%',   // brand-teal (primary)
+    'Inputs':        '202 35% 40%',   // brand-teal (mixed into Data Services)
+    'Foundation':    '210 24% 24%',   // primary slate
+    'Governance':    '212 21% 56%',   // brand-slate (secondary)
+  };
+
+  // =====================================================================
+  // Data loading (the migration seam)
+  // =====================================================================
+  async function loadData() {
+    const res = await fetch(DATA_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+
+    const itemsRows = XLSX.utils.sheet_to_json(wb.Sheets['Items'] || {});
+    const settingsRows = XLSX.utils.sheet_to_json(wb.Sheets['Settings'] || {});
+
+    const itemsBySection = {};
+    for (const r of itemsRows) {
+      const section = (r.Section || '').toString().trim();
+      if (!section || !r.Name) continue;
+      const futureRaw = r.Future;
+      const isFuture = futureRaw === true
+        || (typeof futureRaw === 'string' && futureRaw.trim().toUpperCase() === 'TRUE');
+      const dashboards = r.Dashboards
+        ? r.Dashboards.toString().split(';').map(s => s.trim()).filter(Boolean)
+        : [];
+      const item = {
+        name: r.Name.toString().trim(),
+        short: (r.Short || '').toString().trim(),
+        desc: (r.Description || '').toString().trim(),
+        future: isFuture,
+        dashboards,
+        docURL: (r.DocURL || '').toString().trim(),
+        order: (r.Order != null && r.Order !== '') ? Number(r.Order) : null,
+      };
+      (itemsBySection[section] ||= []).push(item);
+    }
+    for (const sec of Object.keys(itemsBySection)) {
+      itemsBySection[sec].sort((a, b) => {
+        if (a.order == null && b.order == null) return 0;
+        if (a.order == null) return 1;
+        if (b.order == null) return -1;
+        return a.order - b.order;
+      });
+    }
+    const settings = {};
+    for (const r of settingsRows) {
+      if (r.Key) settings[r.Key.toString().trim()] = (r.Value || '').toString();
+    }
+    return { itemsBySection, settings };
+  }
+
+  // =====================================================================
+  // Components
+  // =====================================================================
+
+  function Tile({ item, accentHsl, isActive, onSelect }) {
+    const activeStyle = isActive
+      ? { background: `hsl(${accentHsl})`, borderColor: `hsl(${accentHsl})` }
+      : {};
+    return (
+      <button type="button"
+        className={'tile' + (isActive ? ' is-active' : '')}
+        onClick={() => onSelect(item, accentHsl)}
+        style={activeStyle}>
+        <span>
+          {item.short || item.name}
+          {item.future && <span className="future-star">*</span>}
+        </span>
+      </button>
+    );
+  }
+
+  function Band({ title, subtitle, accentHsl, children }) {
+    return (
+      <div className="card band" style={{
+        background: `hsl(${accentHsl} / 0.06)`,
+        borderColor: `hsl(${accentHsl} / 0.2)`,
+        borderLeftColor: `hsl(${accentHsl})`,
+      }}>
+        <div>
+          <div className="card-title">{title}</div>
+          <div className="card-desc">{subtitle}</div>
+        </div>
+        <div className="tile-grid">{children}</div>
+      </div>
+    );
+  }
+
+  function Rail({ title, subtitle, accentHsl, children }) {
+    return (
+      <div className="card rail" style={{
+        background: `linear-gradient(180deg, hsl(${accentHsl} / 0.13) 0%, hsl(${accentHsl} / 0.04) 100%)`,
+        borderColor: `hsl(${accentHsl} / 0.25)`,
+      }}>
+        <div className="rail-header">
+          <div className="card-title">{title}</div>
+          <div className="card-desc">{subtitle}</div>
+        </div>
+        {children}
+      </div>
+    );
+  }
+
+  // Lucide icons inlined (SCDE design system uses Lucide at 1.75 stroke)
+  function AlertTriangleIcon() {
+    return (
+      <svg className="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    );
+  }
+  function InfoCircleIcon() {
+    return (
+      <svg className="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
+    );
+  }
+
+  function DetailDialog({ item, accentHsl, onClose }) {
+    if (!item) return null;
+    const a = accentHsl || '210 24% 24%';
+    return (
+      <>
+        <div className="dialog-overlay" onClick={onClose} />
+        <div className="dialog" role="dialog" aria-modal="true">
+          <div className="dialog-header" style={{ background: `hsl(${a})` }}>
+            <h3 className="dialog-title">{item.name}</h3>
+            <button className="dialog-close" type="button" aria-label="Close" onClick={onClose}>✕</button>
+          </div>
+          <div className="dialog-body">
+            <p className="dialog-desc">{item.desc}</p>
+
+            {item.dashboards && item.dashboards.length > 0 && (
+              <div>
+                <div className="eyebrow">Dashboards</div>
+                <div className="badge-group">
+                  {item.dashboards.map((d, i) => (
+                    <span key={i} className="badge badge-secondary">{d}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {item.future && (
+              <div className="alert alert-warning" role="status">
+                <AlertTriangleIcon />
+                <div>
+                  <div className="alert-title">Planned / Future Capability</div>
+                  <div className="alert-desc">This item is in current or future development.</div>
+                </div>
+              </div>
+            )}
+
+            <div className="alert alert-info">
+              <InfoCircleIcon />
+              <div>
+                {item.docURL ? (
+                  <>
+                    <div className="alert-title">Documentation</div>
+                    <div className="alert-desc">
+                      <a href={item.docURL} target="_blank" rel="noopener noreferrer">
+                        Open full documentation ↗
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="alert-title">Documentation</div>
+                    <div className="alert-desc">Full documentation available via the GPS portal.</div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // =====================================================================
+  // App
+  // =====================================================================
+  function App() {
+    const [data, setData] = React.useState(null);
+    const [error, setError] = React.useState(null);
+    const [selected, setSelected] = React.useState(null);
+    const [selectedAccent, setSelectedAccent] = React.useState(null);
+
+    React.useEffect(() => {
+      loadData().then(setData).catch(e => setError(e.message || String(e)));
+    }, []);
+
+    if (error) {
+      return (
+        <div className="gps-state error">
+          Couldn't load ecosystem data. Please refresh.
+          <small>({error})</small>
+        </div>
+      );
+    }
+    if (!data) return <div className="gps-state">Loading ecosystem…</div>;
+
+    const { itemsBySection, settings } = data;
+    const sec = s => itemsBySection[s] || [];
+
+    const onSelect = (item, accentHsl) => {
+      setSelected(item);
+      setSelectedAccent(accentHsl);
+    };
+    const close = () => setSelected(null);
+    const isActive = it => selected && selected.name === it.name;
+
+    const noteText = (settings.AsterisksNote || '* In current/future development')
+      .replace(/^\s*\*\s*/, '');
+
+    return (
+      <>
+        <header className="gps-titleblock">
+          <h1 className="gps-title">{settings.Title || 'GPS Ecosystem'}</h1>
+          <p className="gps-definition">{settings.Definition}</p>
+        </header>
+
+        <div className="gps-grid">
+          <Rail title="Who It Serves" subtitle={settings.AudiencesSubtitle}
+            accentHsl={ACCENT_HSL['Audiences']}>
+            {sec('Audiences').map((p, i) => (
+              <Tile key={`u-${i}`} item={p} accentHsl={ACCENT_HSL['Audiences']}
+                isActive={isActive(p)} onSelect={onSelect} />
+            ))}
+          </Rail>
+
+          <div className="gps-center-stack">
+            <Band title="Tools & Applications" subtitle={settings.ToolsSubtitle}
+              accentHsl={ACCENT_HSL['Tools & Apps']}>
+              {[...sec('Tools & Apps'), ...sec('Outputs')].map((it, i) => (
+                <Tile key={`t-${i}`} item={it} accentHsl={ACCENT_HSL['Tools & Apps']}
+                  isActive={isActive(it)} onSelect={onSelect} />
+              ))}
+            </Band>
+
+            <Band title="Data Services" subtitle={settings.DataServicesSubtitle}
+              accentHsl={ACCENT_HSL['Data Services']}>
+              {[...sec('Data Services'), ...sec('Inputs')].map((it, i) => (
+                <Tile key={`d-${i}`} item={it} accentHsl={ACCENT_HSL['Data Services']}
+                  isActive={isActive(it)} onSelect={onSelect} />
+              ))}
+            </Band>
+
+            <Band title="Foundation" subtitle={settings.FoundationSubtitle}
+              accentHsl={ACCENT_HSL['Foundation']}>
+              <div className="tile-grid-4col">
+                {sec('Foundation').map((it, i) => (
+                  <Tile key={`f-${i}`} item={it} accentHsl={ACCENT_HSL['Foundation']}
+                    isActive={isActive(it)} onSelect={onSelect} />
+                ))}
+              </div>
+            </Band>
+          </div>
+
+          <Rail title="Governance" subtitle={settings.GovernanceSubtitle}
+            accentHsl={ACCENT_HSL['Governance']}>
+            {sec('Governance').map((g, i) => (
+              <Tile key={`g-${i}`} item={g} accentHsl={ACCENT_HSL['Governance']}
+                isActive={isActive(g)} onSelect={onSelect} />
+            ))}
+          </Rail>
+        </div>
+
+        <div className="gps-footnote">
+          <span className="future-star">*</span> {noteText}
+        </div>
+
+        <DetailDialog item={selected} accentHsl={selectedAccent} onClose={close} />
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
