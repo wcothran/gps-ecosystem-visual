@@ -1,0 +1,25 @@
+# GPS Ecosystem Visual — code owners
+#
+# GitHub auto-requests a review from anyone listed here when a pull request
+# touches a matching file. Fill in real GitHub usernames (with the @) below.
+#
+# Format:    <path-pattern>   @github-username [@another-username]
+# Reference: https://docs.github.com/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner — gets review on everything unless a more specific rule matches.
+*                            @wcothran
+
+# The viewer code (HTML/CSS/JS). Touching this changes how the visual looks
+# or behaves for the public, so a developer-savvy reviewer should sign off.
+/index.html                  @wcothran
+/publish.html                @wcothran
+
+# The published data file. The publisher swaps this on a routine cadence;
+# it doesn't necessarily need a developer review, but it's worth a second pair
+# of eyes from the X-Team to confirm the content is correct before it goes live.
+/data.xlsx                   @wcothran
+# /data.xlsx                 @<x-team-content-reviewer>
+
+# Documentation — anyone can update, but flag the doc owner for awareness.
+/README.md                   @wcothran
+/README-FOR-*.md             @wcothran
