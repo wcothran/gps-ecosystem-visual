@@ -133,10 +133,11 @@
     .rail-header { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
 
     .tile {
-      display: flex; align-items: center; justify-content: center; text-align: center;
+      display: grid; grid-template-columns: 14px 1fr 14px; gap: 8px;
+      align-items: center; text-align: center;
       background: hsl(var(--card)); color: hsl(var(--foreground));
       border: 1px solid hsl(var(--border)); border-radius: var(--radius);
-      padding: 8px 12px; min-height: 36px;
+      padding: 8px 10px; min-height: 36px;
       font-size: 13px; font-weight: 500; line-height: 1.25;
       cursor: pointer; box-shadow: var(--shadow-xs);
       font-family: var(--font-body);
@@ -144,8 +145,23 @@
     }
     .tile:hover { border-color: hsl(var(--ring) / 0.45); }
     .tile.is-active { color: hsl(var(--primary-foreground)); box-shadow: var(--shadow-md); }
+    .tile-icon-slot { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); }
+    .tile-icon-slot svg { width: 100%; height: 100%; }
+    .tile.is-active .tile-icon-slot { color: hsl(var(--primary-foreground) / 0.85); }
+    .tile-label { text-align: center; line-height: 1.25; }
     .tile-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .tile-grid-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
+
+    /* Legend strip + dialog meta row (matches index.html) */
+    .gps-legend { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 18px 24px; align-items: center; justify-content: center; font-size: 12px; color: hsl(var(--muted-foreground)); }
+    .gps-legend-group { display: inline-flex; align-items: center; gap: 14px; }
+    .gps-legend-item  { display: inline-flex; align-items: center; gap: 6px; }
+    .gps-legend-item svg { width: 14px; height: 14px; flex-shrink: 0; color: hsl(var(--foreground) / 0.7); }
+    .gps-legend-divider { width: 1px; height: 14px; background: hsl(var(--border)); display: inline-block; }
+    .dialog-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 10px 12px; background: hsl(var(--muted)); border-radius: var(--radius); font-size: 12px; color: hsl(var(--muted-foreground)); }
+    .dialog-meta-item { display: inline-flex; align-items: center; gap: 6px; }
+    .dialog-meta-item svg { width: 14px; height: 14px; color: hsl(var(--foreground)); }
+    .dialog-meta-label { font-weight: 600; color: hsl(var(--foreground)); }
 
     .dialog-overlay { position: fixed; inset: 0; background: rgb(0 0 0 / 0.12); z-index: 50; }
     .dialog {
@@ -227,6 +243,8 @@
         short: (r.Short || '').toString().trim(),
         desc: (r.Description || '').toString().trim(),
         future: isFuture,
+        type: (r.Type || '').toString().trim(),
+        flow: (r.Flow || '').toString().trim(),
         dashboards,
         docURL: (r.DocURL || '').toString().trim(),
         order: (r.Order != null && r.Order !== '') ? Number(r.Order) : null,
@@ -248,14 +266,79 @@
     return { itemsBySection, settings };
   }
 
+  // Lucide icon set (1.75 stroke) — Type icons and Flow arrows
+  function MonitorSvg() {
+    return (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>);
+  }
+  function DatabaseSvg() {
+    return (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" /><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" /></svg>);
+  }
+  function CogSvg() {
+    return (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>);
+  }
+  function ArrowRightSvg() {
+    return (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>);
+  }
+  function ArrowLeftSvg() {
+    return (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>);
+  }
+  function ArrowLeftRightSvg() {
+    return (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12" /><polyline points="7 8 3 12 7 16" /><polyline points="17 8 21 12 17 16" /></svg>);
+  }
+  function TypeIcon({ type }) {
+    if (type === 'App')     return <MonitorSvg />;
+    if (type === 'Data')    return <DatabaseSvg />;
+    if (type === 'Service') return <CogSvg />;
+    return null;
+  }
+  function FlowIcon({ flow }) {
+    if (flow === 'In')            return <ArrowRightSvg />;
+    if (flow === 'Out')           return <ArrowLeftSvg />;
+    if (flow === 'Bidirectional') return <ArrowLeftRightSvg />;
+    return null;
+  }
+  function flowLabel(flow) {
+    if (flow === 'In')            return 'Into GPS';
+    if (flow === 'Out')           return 'Out of GPS';
+    if (flow === 'Bidirectional') return 'Bidirectional';
+    return flow;
+  }
+  function Legend() {
+    return (
+      <div className="gps-legend" aria-label="Legend">
+        <span className="gps-legend-group">
+          <span className="gps-legend-item"><MonitorSvg /> App</span>
+          <span className="gps-legend-item"><DatabaseSvg /> Data</span>
+          <span className="gps-legend-item"><CogSvg /> Service</span>
+        </span>
+        <span className="gps-legend-divider" />
+        <span className="gps-legend-group">
+          <span className="gps-legend-item"><ArrowRightSvg /> Into GPS</span>
+          <span className="gps-legend-item"><ArrowLeftSvg /> Out of GPS</span>
+          <span className="gps-legend-item"><ArrowLeftRightSvg /> Bidirectional</span>
+        </span>
+      </div>
+    );
+  }
+
   function Tile({ item, accentHsl, isActive, onSelect }) {
     const activeStyle = isActive ? { background: `hsl(${accentHsl})`, borderColor: `hsl(${accentHsl})` } : {};
     return (
       <button type="button" className={'tile' + (isActive ? ' is-active' : '')}
-        onClick={() => onSelect(item, accentHsl)} style={activeStyle}>
-        <span>{item.short || item.name}
+        onClick={() => onSelect(item, accentHsl)} style={activeStyle}
+        title={[item.type && `Type: ${item.type}`, item.flow && `Flow: ${item.flow}`].filter(Boolean).join(' · ')}>
+        <span className="tile-icon-slot"><TypeIcon type={item.type} /></span>
+        <span className="tile-label">{item.short || item.name}
           {item.future && <span className="future-star">*</span>}
         </span>
+        <span className="tile-icon-slot"><FlowIcon flow={item.flow} /></span>
       </button>
     );
   }
@@ -325,6 +408,22 @@
           </div>
           <div className="dialog-body">
             <p className="dialog-desc">{item.desc}</p>
+            {(item.type || item.flow) && (
+              <div className="dialog-meta">
+                {item.type && (
+                  <span className="dialog-meta-item">
+                    <TypeIcon type={item.type} />
+                    <span><span className="dialog-meta-label">Type:</span> {item.type}</span>
+                  </span>
+                )}
+                {item.flow && (
+                  <span className="dialog-meta-item">
+                    <FlowIcon flow={item.flow} />
+                    <span><span className="dialog-meta-label">Data flow:</span> {flowLabel(item.flow)}</span>
+                  </span>
+                )}
+              </div>
+            )}
             {item.dashboards && item.dashboards.length > 0 && (
               <div>
                 <div className="eyebrow">Dashboards</div>
@@ -398,6 +497,8 @@
             {sec('Governance').map((g, i) => <Tile key={`g-${i}`} item={g} accentHsl={ACCENT_HSL['Governance']} isActive={isActive(g)} onSelect={onSelect} />)}
           </Rail>
         </div>
+
+        <Legend />
 
         <div className="gps-footnote">
           <span className="future-star">*</span> {noteText}

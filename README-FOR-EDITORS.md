@@ -17,9 +17,29 @@ Each card you see in the visual is one row in this sheet.
 | `Short`       | A shorter label for the card face (leave blank to use the full Name)           | No        |
 | `Description` | The paragraph someone sees when they click the card                            | **Yes**   |
 | `Future`      | `TRUE` if it's planned / not yet live; otherwise `FALSE`                       | No        |
+| `Type`        | Pick from the dropdown: `App`, `Data`, or `Service` (leave blank if N/A)       | No        |
+| `Flow`        | Pick from the dropdown: `In`, `Out`, `Bidirectional` (leave blank if N/A)      | No        |
 | `Dashboards`  | A list of dashboard names separated by `;` (e.g. `Student View; Class View`)   | No        |
 | `DocURL`      | A link to the full documentation for this item                                 | No        |
 | `Order`       | Optional sort number (1, 2, 3…). Leave blank to put the item at the end of its section. | No |
+
+### What `Type` and `Flow` do
+
+These two columns let editors say what *kind* of component each item is and which way its data moves. The visual shows them as tiny icons on the card.
+
+**Type** — what kind of thing is it?
+- `App` (monitor icon) — something a user opens and clicks (Teacher Navigator, EdPlan SC, Palmetto Pathways).
+- `Data` (database icon) — a data source or published data product (PowerSchool SIS, School Report Cards).
+- `Service` (gear icon) — a headless integration that moves data in the background (Classlink, GiftED, Assessment Rostering).
+- *Blank* — not applicable (audiences, foundation, governance items).
+
+**Flow** — which way does data move relative to GPS Stadium?
+- `In` (→ arrow) — the component sends data **into** GPS (e.g. PowerSchool, GiftED).
+- `Out` (← arrow) — the component **receives** data from GPS (e.g. Teacher Navigator, School Report Cards).
+- `Bidirectional` (↔ arrow) — data flows both ways (e.g. EdPlan SC, Assessment Rostering).
+- *Blank* — not applicable (audiences, foundation, governance items).
+
+A small legend at the bottom of the visual reminds viewers what each icon means, and the detail panel that opens when you click a card shows the full labels.
 
 ## Sheet 2: `Settings` — page-wide text
 
