@@ -14,6 +14,23 @@ $ErrorActionPreference = 'Stop'
 # --- Seed data (mirrors GPS object in ecosystem-data.jsx) -----------------------
 # Type: App | Data | Service | (blank) — what kind of component it is
 # Flow: In | Out | Bidirectional | (blank) — direction of data flow vs GPS Stadium
+# DocURL: per-item link to its inventory document on SharePoint
+
+# Base path to the GPS Inventory folder on the X-Team SharePoint site.
+# Folder share link (the whole folder, for editors who need to browse):
+#   https://scdoe.sharepoint.com/:f:/s/X-TeamGPSGrowingPathwaysforStudents_Group/IgClSoL_tx4PTpjTqXoFz8DQATAO31FwWBhZtm3MC8xbCHk?e=JzmImM
+# Direct file URLs below resolve against the standard team-site document library.
+# If the team-site path differs in your tenant, update $invBase and re-run this script.
+$invBase = 'https://scdoe.sharepoint.com/sites/X-TeamGPSGrowingPathwaysforStudents_Group/Shared%20Documents/General/04_GPS%20Inventory'
+function Inv([string]$relPath) {
+    # Build a SharePoint URL from the inventory-relative path. Spaces become %20;
+    # parens become %28 / %29. Pass the path with normal spaces and parens.
+    $segments = $relPath.Split('/')
+    $encoded = $segments | ForEach-Object {
+        $_.Replace('%','%25').Replace(' ','%20').Replace('(','%28').Replace(')','%29').Replace('#','%23')
+    }
+    return "$invBase/$($encoded -join '/')"
+}
 
 $items = @(
     # Audiences -- people, not components. Type/Flow blank.
@@ -23,40 +40,40 @@ $items = @(
     @{ Section='Audiences'; Name='Public'; Short='Public'; Description='Policymakers, families, students, community members, and other stakeholders accessing public-facing data, report cards, and dashboards.'; Future=$false; Type=''; Flow=''; Dashboards=''; DocURL=''; Order=4 }
 
     # Tools & Apps -- all are apps users open; flow varies
-    @{ Section='Tools & Apps'; Name='Teacher Navigator'; Short='Teacher Navigator'; Description='Student-level decision-support app for classroom teachers. Student, Classroom, Grade Level, and Section disaggregations of student performance dashboards. Expected growth projections for students; grouping feature for interventions.'; Future=$false; Type='App'; Flow='Out'; Dashboards='Student View; Class View; Grade View; Group View'; DocURL=''; Order=1 }
-    @{ Section='Tools & Apps'; Name='Admin Navigator'; Short='Admin Navigator'; Description='School and district leader app with aggregate data and drill-down dashboards. Allows for analysis of enrollment, attendance, behavior, assessments, grades, and accountability indicators.'; Future=$false; Type='App'; Flow='Out'; Dashboards='Profile; Chronic Absenteeism; Enrollment; Behavior; Assessment; Course Grades; On-Track & CCR; Predictions'; DocURL='https://scdoe.sharepoint.com/:w:/s/X-TeamGPSGrowingPathwaysforStudents_Group/IQBu-joU23DHT4uYeTMIV_9_AbUuGDtnaZ08lrJPb-vsaM0?e=OoI1nh'; Order=2 }
-    @{ Section='Tools & Apps'; Name='PDC Dashboards'; Short='Podium+'; Description='District-facing analytics dashboards delivered by the Palmetto Data Collaborative (PDC). Separate product from the Navigators - uses the same data foundation but accessed by LEA staff for ad-hoc and comparative visualizations.'; Future=$false; Type='App'; Flow='Out'; Dashboards=''; DocURL=''; Order=3 }
+    @{ Section='Tools & Apps'; Name='Teacher Navigator'; Short='Teacher Navigator'; Description='Student-level decision-support app for classroom teachers. Student, Classroom, Grade Level, and Section disaggregations of student performance dashboards. Expected growth projections for students; grouping feature for interventions.'; Future=$false; Type='App'; Flow='Out'; Dashboards='Student View; Class View; Grade View; Group View'; DocURL=(Inv 'teacher-navigator-2026-05-05.docx'); Order=1 }
+    @{ Section='Tools & Apps'; Name='Admin Navigator'; Short='Admin Navigator'; Description='School and district leader app with aggregate data and drill-down dashboards. Allows for analysis of enrollment, attendance, behavior, assessments, grades, and accountability indicators.'; Future=$false; Type='App'; Flow='Out'; Dashboards='Profile; Chronic Absenteeism; Enrollment; Behavior; Assessment; Course Grades; On-Track & CCR; Predictions'; DocURL=(Inv 'administrator-navigator-2026-05-05.docx'); Order=2 }
+    @{ Section='Tools & Apps'; Name='PDC Dashboards'; Short='Podium+'; Description='District-facing analytics dashboards delivered by the Palmetto Data Collaborative (PDC). Separate product from the Navigators - uses the same data foundation but accessed by LEA staff for ad-hoc and comparative visualizations.'; Future=$false; Type='App'; Flow='Out'; Dashboards=''; DocURL=(Inv 'podium-plus-2026-05-05.docx'); Order=3 }
     @{ Section='Tools & Apps'; Name='Member Center'; Short='SCDE Navigator'; Description='App portal for SCDE and LEA users. Content spans HR functions and Grant Reporting to Data Reports and Support Requests.'; Future=$true; Type='App'; Flow='Bidirectional'; Dashboards=''; DocURL=''; Order=4 }
 
     # Outputs -- downstream uses of GPS data; mostly Out
-    @{ Section='Outputs'; Name='School Report Cards'; Short=''; Description='School accountability reports published annually.'; Future=$false; Type='Data'; Flow='Out'; Dashboards=''; DocURL=''; Order=1 }
-    @{ Section='Outputs'; Name='Funding Data'; Short=''; Description='Financial and funding visualizations and reports, driven by GPS analytics.'; Future=$false; Type='Data'; Flow='Out'; Dashboards=''; DocURL=''; Order=2 }
-    @{ Section='Outputs'; Name='Research Requests'; Short=''; Description='Custom data extracts for approved external research partners and policy studies.'; Future=$false; Type='Data'; Flow='Out'; Dashboards=''; DocURL=''; Order=3 }
-    @{ Section='Outputs'; Name='Program Office Reports'; Short=''; Description='Aggregated analytics (reports and visualizations) consumed by SCDE program offices for program management, evaluations, and federal reporting.'; Future=$false; Type='Data'; Flow='Out'; Dashboards=''; DocURL=''; Order=4 }
+    @{ Section='Outputs'; Name='School Report Cards'; Short=''; Description='School accountability reports published annually.'; Future=$false; Type='Data'; Flow='Out'; Dashboards=''; DocURL=(Inv 'school-report-cards.docx'); Order=1 }
+    @{ Section='Outputs'; Name='Funding Data'; Short=''; Description='Financial and funding visualizations and reports, driven by GPS analytics.'; Future=$false; Type='Data'; Flow='Out'; Dashboards=''; DocURL=(Inv 'funding-data.docx'); Order=2 }
+    @{ Section='Outputs'; Name='Research Requests'; Short=''; Description='Custom data extracts for approved external research partners and policy studies.'; Future=$false; Type='Data'; Flow='Out'; Dashboards=''; DocURL=(Inv 'research-requests.docx'); Order=3 }
+    @{ Section='Outputs'; Name='Program Office Reports'; Short=''; Description='Aggregated analytics (reports and visualizations) consumed by SCDE program offices for program management, evaluations, and federal reporting.'; Future=$false; Type='Data'; Flow='Out'; Dashboards=''; DocURL=(Inv 'program-office-reports-and-analytics.docx'); Order=4 }
     @{ Section='Outputs'; Name='App Platform'; Short=''; Description='A planned app-store model: vetted SCDE offices or partners publish data services on the GPS platform.'; Future=$true; Type='Service'; Flow='Bidirectional'; Dashboards=''; DocURL=''; Order=5 }
     @{ Section='Outputs'; Name='State Navigator'; Short=''; Description='Planned state-leadership reports and dashboards: aggregating GPS analytics for cross-LEA comparison, accountability, and strategic planning.'; Future=$true; Type='App'; Flow='Out'; Dashboards=''; DocURL=''; Order=6 }
 
     # Data Services -- mix of apps and headless services; flow varies
-    @{ Section='Data Services'; Name='Classlink'; Short=''; Description='Single sign-on and rostering provider. Pushes identity/roster data into connected apps.'; Future=$false; Type='Service'; Flow='In'; Dashboards=''; DocURL=''; Order=1 }
-    @{ Section='Data Services'; Name='Palmetto Pathways'; Short='Palm. Pathways'; Description='Student graduation pathways and credential tracking application. Includes workflows for school counselors and school/district administrators.'; Future=$false; Type='App'; Flow='Bidirectional'; Dashboards=''; DocURL=''; Order=2 }
-    @{ Section='Data Services'; Name='GiftED'; Short=''; Description='Gifted and talented program-management service. Sends program eligibility and participation data into GPS.'; Future=$false; Type='Service'; Flow='In'; Dashboards=''; DocURL=''; Order=3 }
-    @{ Section='Data Services'; Name='Everyday Labs'; Short=''; Description='Attendance intervention partner. Consumes attendance data from GPS and delivers attendance recovery interventions to schools.'; Future=$false; Type='Service'; Flow='Bidirectional'; Dashboards=''; DocURL=''; Order=4 }
-    @{ Section='Data Services'; Name='EdPlan SC'; Short=''; Description='Individualized Education Plan (IEP) management service. Bi-directional data exchange with GPS.'; Future=$false; Type='App'; Flow='Bidirectional'; Dashboards=''; DocURL=''; Order=5 }
-    @{ Section='Data Services'; Name='Assessment Rostering'; Short=''; Description='Automated rostering service for state vendor assessments.'; Future=$false; Type='Service'; Flow='Bidirectional'; Dashboards=''; DocURL=''; Order=6 }
+    @{ Section='Data Services'; Name='Classlink'; Short=''; Description='Single sign-on and rostering provider. Pushes identity/roster data into connected apps.'; Future=$false; Type='Service'; Flow='In'; Dashboards=''; DocURL=(Inv 'classlink-statelink.docx'); Order=1 }
+    @{ Section='Data Services'; Name='Palmetto Pathways'; Short='Palm. Pathways'; Description='Student graduation pathways and credential tracking application. Includes workflows for school counselors and school/district administrators.'; Future=$false; Type='App'; Flow='Bidirectional'; Dashboards=''; DocURL=(Inv 'palmetto-pathways.docx'); Order=2 }
+    @{ Section='Data Services'; Name='GiftED'; Short=''; Description='Gifted and talented program-management service. Sends program eligibility and participation data into GPS.'; Future=$false; Type='Service'; Flow='In'; Dashboards=''; DocURL=(Inv 'gifted.docx'); Order=3 }
+    @{ Section='Data Services'; Name='Everyday Labs'; Short=''; Description='Attendance intervention partner. Consumes attendance data from GPS and delivers attendance recovery interventions to schools.'; Future=$false; Type='Service'; Flow='Bidirectional'; Dashboards=''; DocURL=(Inv 'everyday-labs.docx'); Order=4 }
+    @{ Section='Data Services'; Name='EdPlan SC'; Short=''; Description='Individualized Education Plan (IEP) management service. Bi-directional data exchange with GPS.'; Future=$false; Type='App'; Flow='Bidirectional'; Dashboards=''; DocURL=(Inv 'edplan-sc.docx'); Order=5 }
+    @{ Section='Data Services'; Name='Assessment Rostering'; Short=''; Description='Automated rostering service for state vendor assessments.'; Future=$false; Type='Service'; Flow='Bidirectional'; Dashboards=''; DocURL=(Inv 'classlink-statelink.docx'); Order=6 }
 
     # Inputs -- all data sources flowing into GPS
-    @{ Section='Inputs'; Name='PowerSchool SIS'; Short=''; Description='Statewide Student Information System - the canonical source for enrollment, demographics, grades, attendance, and schedules. PowerSchool is an external vendor system integrated with the Ed-Fi API.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=1 }
+    @{ Section='Inputs'; Name='PowerSchool SIS'; Short=''; Description='Statewide Student Information System - the canonical source for enrollment, demographics, grades, attendance, and schedules. PowerSchool is an external vendor system integrated with the Ed-Fi API.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=(Inv 'powerschool-sis.docx'); Order=1 }
     @{ Section='Inputs'; Name='Students Assessments'; Short=''; Description='Student assessment results (SC READY, SC PASS, end-of-course, etc.) loaded into GPS for analytics.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=2 }
-    @{ Section='Inputs'; Name='EdPlanSC'; Short=''; Description='Individualized Education Plan (IEP) management service. Note: EdPlanSC also appears as a Data Service because it both produces and consumes data.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=3 }
-    @{ Section='Inputs'; Name='iReady'; Short=''; Description='Diagnostic and instructional assessment data from district adoptions of iReady.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=4 }
-    @{ Section='Inputs'; Name='Early Childhood Programs'; Short=''; Description='Early childhood program enrollment and outcomes data.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=5 }
+    @{ Section='Inputs'; Name='EdPlanSC'; Short=''; Description='Individualized Education Plan (IEP) management service. Note: EdPlanSC also appears as a Data Service because it both produces and consumes data.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=(Inv 'edplan-sc.docx'); Order=3 }
+    @{ Section='Inputs'; Name='iReady'; Short=''; Description='Diagnostic and instructional assessment data from district adoptions of iReady.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=(Inv 'iready.docx'); Order=4 }
+    @{ Section='Inputs'; Name='Early Childhood Programs'; Short=''; Description='Early childhood program enrollment and outcomes data.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=(Inv 'early-childhood-program-data.docx'); Order=5 }
     @{ Section='Inputs'; Name='ESTF Data'; Short=''; Description='Educational Scholarship Trust Fund data. A SCDE program evaluated via GPS.'; Future=$false; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=6 }
     @{ Section='Inputs'; Name='Educator Workforce'; Short=''; Description='Educator pipeline, workforce, and credentialing data - inclusive of SCEducator, SCLead, and Educator Preparation program data.'; Future=$true; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=7 }
     @{ Section='Inputs'; Name='Financial Reporting'; Short=''; Description='Transparent LEA and state-level financial data - connecting spending to student outcomes.'; Future=$true; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=8 }
     @{ Section='Inputs'; Name='CTE Credentials'; Short=''; Description='Career and technical pathway data - completions, credentials, and workforce outcomes.'; Future=$true; Type='Data'; Flow='In'; Dashboards=''; DocURL=''; Order=9 }
 
     # Foundation -- these ARE GPS; Type/Flow don't apply (left blank)
-    @{ Section='Foundation'; Name='Stadium Data Warehouse'; Short='Stadium'; Description='The centralized cloud longitudinal data warehouse where all GPS data lands and is analytically modeled.'; Future=$false; Type=''; Flow=''; Dashboards=''; DocURL=''; Order=1 }
+    @{ Section='Foundation'; Name='Stadium Data Warehouse'; Short='Stadium'; Description='The centralized cloud longitudinal data warehouse where all GPS data lands and is analytically modeled.'; Future=$false; Type=''; Flow=''; Dashboards=''; DocURL=(Inv 'stadium-2026-05-05.docx'); Order=1 }
     @{ Section='Foundation'; Name='Ed-Fi Integration Layer'; Short='Ed-Fi'; Description='The Ed-Fi Data Standard and API - the interoperability model that defines how educational data flows between systems. Sits between systems/applications and Stadium.'; Future=$false; Type=''; Flow=''; Dashboards=''; DocURL=''; Order=2 }
     @{ Section='Foundation'; Name='Data Standards & APIs'; Short='APIs'; Description='The shared APIs, data contracts, definitions, and naming conventions that let services exchange data consistently. The "rules of the road" that sit on top of Ed-Fi.'; Future=$false; Type=''; Flow=''; Dashboards=''; DocURL=''; Order=3 }
     @{ Section='Foundation'; Name='Security & Governance'; Short='Security'; Description='Cross-cutting access controls, privacy policies, audit, and data governance practices. Not a separate system, as it wraps every other foundation component.'; Future=$false; Type=''; Flow=''; Dashboards=''; DocURL=''; Order=4 }
