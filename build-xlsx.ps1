@@ -90,7 +90,7 @@ $settings = [ordered]@{
     'AsterisksNote'        = '* In current/future development'
     'AudiencesSubtitle'    = 'Audiences GPS exists to serve - consumers of the ecosystem.'
     'ToolsSubtitle'        = 'What people open. User-facing apps and downstream products that consume GPS data.'
-    'DataServicesSubtitle' = 'Services that produce and consume data via the foundation, plus the integrated applications.'
+    'DataServicesSubtitle' = 'Services that produce and consume data via the foundation.'
     'FoundationSubtitle'   = 'The shared technical substrate. Stadium is the warehouse; Ed-Fi defines interoperability; APIs and Security wrap everything.'
     'GovernanceSubtitle'   = 'Who keeps the ecosystem coherent across SCDE divisions and partners.'
 }
