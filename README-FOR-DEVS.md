@@ -14,7 +14,8 @@ A statically-hosted, publicly-viewable visualization of the **GPS (Growing Pathw
 | `data.xlsx`               | The published copy of the ecosystem content. Replaced by the publisher on each release.         |
 | `publish.html`            | Drag-and-drop preview helper for publishers. Also useful for local development (see below).     |
 | `GPS-Ecosystem.xlsx`      | The seeded initial workbook. After first delivery, the canonical version lives on SharePoint.   |
-| `build-xlsx.ps1`          | One-off PowerShell script that regenerates the seed `.xlsx` from inline data. Excel COM-based.  |
+| `build-xlsx.ps1`          | **Historical seed only — do not run against an edited workbook.** Generated the initial `.xlsx`. The SharePoint copy has been authoritative since first publish; re-running this would overwrite editor changes. Kept for reference / disaster recovery only. |
+| `merge-add-scope.ps1`     | One-time migration that read a downloaded copy of the live SharePoint workbook and added the `Scope` column without touching editor edits. Kept as an example for any future column-add operation. |
 | `README-FOR-EDITORS.md`   | Editing guide for non-technical SCDE staff.                                                     |
 | `README-FOR-PUBLISHERS.md`| Manual publishing workflow for the X-Team publisher.                                            |
 | `README-FOR-DEVS.md`      | This file.                                                                                      |

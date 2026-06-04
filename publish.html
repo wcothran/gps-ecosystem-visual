@@ -120,6 +120,14 @@
     .gps-titleblock { text-align: center; margin-bottom: 24px; }
     .gps-title { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: hsl(var(--primary)); line-height: 1.2; margin-bottom: 8px; }
     .gps-definition { font-size: 14px; color: hsl(var(--muted-foreground)); line-height: 1.6; max-width: 880px; margin: 0 auto; }
+
+    /* Scope toggle (SCDE Tabs pattern) */
+    .scope-toggle-wrap { display: flex; justify-content: center; margin: 0 0 20px; }
+    .scope-toggle { display: inline-flex; background: hsl(var(--muted)); padding: 4px; border-radius: var(--radius); gap: 2px; }
+    .scope-toggle-trigger { padding: 8px 16px; font-size: 13px; font-weight: 500; font-family: var(--font-body); border: none; background: transparent; border-radius: calc(var(--radius) - 2px); cursor: pointer; color: hsl(var(--muted-foreground)); transition: background 0.15s ease, color 0.15s ease; }
+    .scope-toggle-trigger:hover { color: hsl(var(--foreground)); }
+    .scope-toggle-trigger.active { background: hsl(var(--background)); color: hsl(var(--foreground)); box-shadow: var(--shadow-xs); }
+
     .gps-grid { display: grid; grid-template-columns: 200px 1fr 200px; gap: 16px; align-items: stretch; }
     .gps-center-stack { display: flex; flex-direction: column; gap: 12px; }
     .gps-footnote { margin-top: 16px; font-size: 12px; color: hsl(var(--muted-foreground)); text-align: right; }
@@ -238,6 +246,7 @@
       const dashboards = r.Dashboards
         ? r.Dashboards.toString().split(';').map(s => s.trim()).filter(Boolean)
         : [];
+      const rawScope = (r.Scope || '').toString().trim();
       const item = {
         name: r.Name.toString().trim(),
         short: (r.Short || '').toString().trim(),
@@ -245,6 +254,7 @@
         future: isFuture,
         type: (r.Type || '').toString().trim(),
         flow: (r.Flow || '').toString().trim(),
+        scope: ['Essential', 'Current', 'Future'].includes(rawScope) ? rawScope : 'Current',
         dashboards,
         docURL: (r.DocURL || '').toString().trim(),
         order: (r.Order != null && r.Order !== '') ? Number(r.Order) : null,
@@ -458,10 +468,37 @@
     );
   }
 
+  // Scope filter (matches index.html)
+  const SCOPE_MODES = [
+    { value: 'Essential', label: 'Essential' },
+    { value: 'Current',   label: 'Current capability' },
+    { value: 'Future',    label: 'Future capability' },
+  ];
+  const SCOPE_RANK = { Essential: 1, Current: 2, Future: 3 };
+  function filterByScope(items, mode) {
+    const limit = SCOPE_RANK[mode] || 2;
+    return items.filter(it => (SCOPE_RANK[it.scope || 'Current'] || 2) <= limit);
+  }
+  function ScopeToggle({ value, onChange }) {
+    return (
+      <div className="scope-toggle-wrap">
+        <div className="scope-toggle" role="tablist" aria-label="View scope">
+          {SCOPE_MODES.map(m => (
+            <button key={m.value} type="button" role="tab"
+              aria-selected={value === m.value}
+              className={'scope-toggle-trigger' + (value === m.value ? ' active' : '')}
+              onClick={() => onChange(m.value)}>{m.label}</button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   function Visual({ data }) {
     const [selected, setSelected] = React.useState(null);
     const [accent, setAccent] = React.useState(null);
-    const sec = s => data.itemsBySection[s] || [];
+    const [scope, setScope] = React.useState('Current');
+    const sec = s => filterByScope(data.itemsBySection[s] || [], scope);
     const { settings } = data;
     const onSelect = (it, a) => { setSelected(it); setAccent(a); };
     const isActive = it => selected && selected.name === it.name;
@@ -473,6 +510,8 @@
           <h1 className="gps-title">{settings.Title || 'GPS Ecosystem'}</h1>
           <p className="gps-definition">{settings.Definition}</p>
         </header>
+
+        <ScopeToggle value={scope} onChange={setScope} />
 
         <div className="gps-grid">
           <Rail title="Who It Serves" subtitle={settings.AudiencesSubtitle} accentHsl={ACCENT_HSL['Audiences']}>
